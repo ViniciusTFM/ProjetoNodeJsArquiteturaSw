@@ -6,12 +6,18 @@ import {
   Param,
   Post,
   UnprocessableEntityException,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { CreateProjectService } from 'src/domain/use-cases/projects/create-project.service';
 import { GetAllProjectsService } from 'src/domain/use-cases/projects/get-all-projects.service';
 import { GetProjectByIdService } from 'src/domain/use-cases/projects/get-project-by-id.service';
 import { CreateProjectDto } from './dtos/create-project.dto';
-const userId = 1;
+
+interface AuthRequest extends Request {
+  user: { sub: number; email?: string };
+}
+
 @Controller('projects')
 export class ProjectsController {
   constructor(
@@ -21,9 +27,10 @@ export class ProjectsController {
   ) {}
 
   @Get()
-  async findAll() {
+  async findAll(@Req() request: AuthRequest) {
     try {
-      return await this.getAllProjectsUseCase.execute(userId);
+      const loggedUser = request.user;
+      return await this.getAllProjectsUseCase.execute(loggedUser.sub);
     } catch (error: unknown) {
       if (error instanceof Error) {
         throw new NotFoundException(error.message);
@@ -33,10 +40,11 @@ export class ProjectsController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number) {
+  async findOne(@Req() request: AuthRequest, @Param('id') id: number) {
     try {
+      const loggedUser = request.user;
       return await this.getProjectByIdUseCase.execute({
-        userId,
+        userId: loggedUser.sub,
         projectId: id,
       });
     } catch (error: unknown) {
@@ -48,10 +56,14 @@ export class ProjectsController {
   }
 
   @Post()
-  async create(@Body() createProjectDto: CreateProjectDto) {
+  async create(
+    @Req() request: AuthRequest,
+    @Body() createProjectDto: CreateProjectDto,
+  ) {
     try {
+      const loggedUser = request.user;
       return await this.createProjectUseCase.execute({
-        userId,
+        userId: loggedUser.sub,
         project: createProjectDto,
       });
     } catch (error: unknown) {

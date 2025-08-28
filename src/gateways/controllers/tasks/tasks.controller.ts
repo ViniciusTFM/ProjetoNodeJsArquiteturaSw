@@ -5,14 +5,19 @@ import {
   NotFoundException,
   Param,
   Post,
+  Req,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { CreateTaskService } from 'src/domain/use-cases/tasks/create-task.service';
 import { GetAllTasksService } from 'src/domain/use-cases/tasks/get-all-tasks.service';
 import { GetTaskByIdService } from 'src/domain/use-cases/tasks/get-task-by-id.service';
 import { CreateTaskDto } from './dtos/create-task.dto';
 
-const userId = 1;
+// Interface para tipar request com usuário logado
+interface AuthRequest extends Request {
+  user: { sub: number; email?: string };
+}
 
 @Controller('tasks')
 export class TasksController {
@@ -23,9 +28,10 @@ export class TasksController {
   ) {}
 
   @Get()
-  async findAll() {
+  async findAll(@Req() request: AuthRequest) {
     try {
-      return await this.getAllTasksUseCase.execute({ userId });
+      const loggedUser = request.user;
+      return await this.getAllTasksUseCase.execute({ userId: loggedUser.sub });
     } catch (error: unknown) {
       if (error instanceof Error) {
         throw new NotFoundException(error.message);
@@ -35,10 +41,11 @@ export class TasksController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number) {
+  async findOne(@Req() request: AuthRequest, @Param('id') id: number) {
     try {
+      const loggedUser = request.user;
       return await this.getTaskByIdUseCase.execute({
-        userId,
+        userId: loggedUser.sub,
         taskId: id,
       });
     } catch (error: unknown) {
@@ -50,10 +57,14 @@ export class TasksController {
   }
 
   @Post()
-  async create(@Body() createTaskDto: CreateTaskDto) {
+  async create(
+    @Req() request: AuthRequest,
+    @Body() createTaskDto: CreateTaskDto,
+  ) {
     try {
+      const loggedUser = request.user;
       return await this.createTaskUseCase.execute({
-        userId,
+        userId: loggedUser.sub,
         task: createTaskDto,
       });
     } catch (error: unknown) {

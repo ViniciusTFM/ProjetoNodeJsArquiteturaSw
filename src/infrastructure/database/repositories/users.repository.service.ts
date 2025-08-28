@@ -25,4 +25,12 @@ export class UsersRepositoryService
     const entity = await this.save(payload);
     return entity; // UserEntity implementa IUser
   }
+
+  async findByEmail(email: string): Promise<IUser> {
+    const user = await this.findOneBy({ email });
+    if (!user) {
+      throw new NotFoundException(`User with email ${email} not found`);
+    }
+    return user;
+  }
 }
