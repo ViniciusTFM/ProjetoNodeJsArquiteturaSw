@@ -20,6 +20,12 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@exercicio1/*": ["apps/exercicio1/src/*"],
+      "@tasks/*": ["apps/tasks/src/*"]
+    }
+  },
+  "include": ["apps/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

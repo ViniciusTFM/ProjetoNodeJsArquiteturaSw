@@ -1,7 +1,5 @@
-version: '3.9'
-
 services:
-  redis: # Name of container
+  redis:
     image: redis
     ports:
       - "6379:6379"
